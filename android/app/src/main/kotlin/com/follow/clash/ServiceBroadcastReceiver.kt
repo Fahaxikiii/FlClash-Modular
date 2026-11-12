@@ -33,6 +33,7 @@ class ServiceBroadcastReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleAction(action: String) {
+        ServiceState.syncModuleState()
         when (action) {
             BroadcastAction.VPN_START_REQUESTED.action -> ServiceState.handleStartAction()
 

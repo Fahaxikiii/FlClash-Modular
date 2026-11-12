@@ -28,6 +28,15 @@ object ServiceState {
 
     suspend fun awaitRunTime(): Long = machine.awaitRunTime()
 
+    suspend fun adoptRunning() = machine.adoptRunning()
+
+    suspend fun syncModuleState() {
+        val status = ServiceController.attach() ?: return
+        if (status.running) {
+            machine.adoptRunning()
+        }
+    }
+
     fun requestStart(): Deferred<Boolean> = machine.requestStart()
 
     fun requestStop(): Deferred<Boolean> = machine.requestStop()

@@ -10,7 +10,6 @@ import com.follow.clash.models.SharedState
 import com.follow.clash.plugins.AppPlugin
 import com.follow.clash.plugins.ServicePlugin
 import com.follow.clash.plugins.TilePlugin
-import com.follow.clash.service.ServiceConfig
 import com.follow.clash.service.models.NotificationParams
 import com.follow.clash.service.models.VpnOptions
 import io.flutter.embedding.engine.FlutterEngine
@@ -101,7 +100,7 @@ internal object AndroidServiceStateHost : ServiceStateHost {
     override fun showToast(message: String) = GlobalState.application.showToast(message)
 
     override fun updateNotificationParams(params: NotificationParams) =
-        ServiceConfig.updateNotificationParams(params)
+        ServiceController.setNotification(params)
 
     override fun loadSharedState(): SharedState = GlobalState.application.sharedState
 

@@ -74,6 +74,18 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
         host.runtime?.startedAtMillis?.takeIf { isRunRequested } ?: 0L
     }
 
+    /**
+     * A run the module kept while this process was gone is this process's run
+     * too: adopt its intent so the switch reads running and stop reaches it.
+     */
+    suspend fun adoptRunning() = transitionLock.withLock {
+        if (isRunRequested || host.runtime == null) {
+            return@withLock
+        }
+        arbiter.request(running = true)
+        publish()
+    }
+
     fun captureRequestToken(): RunRequest = arbiter.current()
 
     /**

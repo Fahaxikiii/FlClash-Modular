@@ -27,6 +27,7 @@ class QuickActionActivity : Activity() {
         val action = QuickAction.entries.firstOrNull { it.action == intent.action } ?: return
         ShortcutManagerCompat.reportShortcutUsed(this, action.shortcutId)
         GlobalState.launch {
+            ServiceState.syncModuleState()
             when (action) {
                 QuickAction.START -> ServiceState.handleStartAction()
                 QuickAction.STOP -> ServiceState.handleStopAction()

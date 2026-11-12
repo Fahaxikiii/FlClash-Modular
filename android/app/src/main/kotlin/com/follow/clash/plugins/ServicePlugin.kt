@@ -4,9 +4,7 @@ import com.follow.clash.ServiceController
 import com.follow.clash.ServiceState
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
-import com.follow.clash.core.Core
 import com.follow.clash.models.SharedState
-import com.follow.clash.service.NetworkObserver
 import com.google.gson.Gson
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.BinaryMessenger
@@ -29,11 +27,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        // The main thread is also Flutter's UI thread, where "init" would load it.
-        scope.launch {
-            runCatching { Core.load() }
-                .onFailure { error -> GlobalState.log("Unable to load the Core: $error") }
-        }
         messenger = binding.binaryMessenger
         channel = MethodChannel(messenger, SERVICE_CHANNEL)
         channel.setMethodCallHandler(this)
@@ -73,11 +66,22 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
     }
 
+    // The run this connects to may already exist: the module keeps it while the
+    // UI process is gone, and adopting it here keeps the switch from restarting
+    // a tunnel that never stopped.
     private fun initialize(result: MethodChannel.Result) {
-        NetworkObserver.start()
         ServiceController.setEventListener(::sendEvent)
-            .onSuccess { result.success("") }
-            .onFailure { error -> result.success(error.message.orEmpty()) }
+        scope.launch {
+            val status = runCatching { ServiceController.attach() }
+                .onFailure { error ->
+                    GlobalState.log("Unable to reach the Core module: $error")
+                }
+                .getOrNull()
+            if (status?.running == true) {
+                ServiceState.adoptRunning()
+            }
+            result.success("")
+        }
     }
 
     private fun shutdown(result: MethodChannel.Result) {
@@ -100,6 +104,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     private fun getRunTime(result: MethodChannel.Result) {
         scope.launch {
+            runCatching { ServiceController.attach() }
             result.success(ServiceState.awaitRunTime())
         }
     }

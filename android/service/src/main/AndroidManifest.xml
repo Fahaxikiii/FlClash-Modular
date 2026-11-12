@@ -4,11 +4,24 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application>
+        <!-- The run, the tunnel and the Core live in the :core process, so a UI
+             task that is swiped away cannot take them with it. -->
+        <service
+            android:name=".module.CoreModuleService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:process=":core">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="core" />
+        </service>
+
         <service
             android:name=".VpnService"
             android:exported="false"
             android:foregroundServiceType="specialUse"
-            android:permission="android.permission.BIND_VPN_SERVICE">
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":core">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
@@ -20,7 +33,8 @@
         <service
             android:name=".ProxyService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:process=":core">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="proxy" />

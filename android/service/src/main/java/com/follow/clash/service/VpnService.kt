@@ -20,6 +20,7 @@ import com.follow.clash.service.models.toCIDR
 import com.follow.clash.service.models.tunMtu
 import com.follow.clash.service.models.tunOptions
 import com.follow.clash.service.modules.ServiceModules
+import com.follow.clash.service.module.ModuleHost
 import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 import android.net.VpnService as SystemVpnService
@@ -120,6 +121,7 @@ class VpnService : SystemVpnService(), ManagedService {
     override fun onRevoke() {
         stop()
         notifyVpnRevoked()
+        ModuleHost.onTunnelRevoked()
     }
 
     private fun handleStart(options: VpnOptions) {
